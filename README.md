@@ -1,6 +1,8 @@
 # unvibecode-pem-repro
 
-Reproduction for an UnvibeCode bug: a `-----BEGIN PRIVATE KEY-----` header with no END line makes the client's credential screening replace **everything after it** in the analysis request with `<REDACTED_PRIVATE_KEY>`, including code from other files.
+This repo reproduces a bug I found in UnvibeCode. If a file only mentions a private-key header, for example in a comment, UnvibeCode hides all the code after it from the AI review, including code from other files.
+
+In technical terms: a `-----BEGIN PRIVATE KEY-----` header with no END line makes the client's credential screening replace everything after it in the analysis request with `<REDACTED_PRIVATE_KEY>`.
 
 Issue: https://github.com/FinanceFlash/unvibecode/issues/388
 
@@ -10,7 +12,7 @@ Issue: https://github.com/FinanceFlash/unvibecode/issues/388
 |---|---|
 | `fixture_bug/` | 5-file Flask shop. `shop/keys.py` has `PEM_HEADER = "-----BEGIN PRIVATE KEY-----"` |
 | `fixture_control/` | Identical except that line is `"-----BEGIN " + "PRIVATE KEY-----"` (same string at runtime) |
-| `probe_request.py` | Runs UnvibeCode's own Steps 01–02 locally and shows what screening does to each Step 03 request. No API calls |
+| `probe_request.py` | Runs UnvibeCode's own Steps 01 and 02 locally and shows what screening does to each Step 03 request. No API calls |
 | `check_public_repos.py` | Runs `redact_text` on three public files at pinned commits |
 | `compare_fix.py` | Shipped `_PEM` vs a suggested replacement, through the real `redact_text()`. Key bodies are random and generated at run time |
 
@@ -36,7 +38,9 @@ python -m unvibecode review --repository fixture_control
 
 ## Results (UnvibeCode 0.3.15, Windows 11, Python 3.11.9)
 
-**Screening (deterministic)**
+### What the model receives
+
+This part gives the same result on every run.
 
 | | Chunks sent to the model | Lines replaced |
 |---|---|---|
@@ -44,7 +48,9 @@ python -m unvibecode review --repository fixture_control
 | `fixture_control` | 4 of 4 | 0 |
 | komuw/sewer @ d12d5a2, request 1 | 20 of 44 (23 other files gone, from `crypto.py:310`) | 1,719 of 4,616 |
 
-**Full review (model output varies; 3 bug runs, 2 control runs)**
+### Full review
+
+The model's output changes between runs. These are 3 runs of the bug fixture and 2 of the control.
 
 | | `fixture_bug` | `fixture_control` |
 |---|---|---|
@@ -52,7 +58,7 @@ python -m unvibecode review --repository fixture_control
 | Final status | COMPLETE with shallow workflows (2/3), PARTIAL (1/3) | COMPLETE (2/2) |
 | Refund risk finding | 0/3 | 1/2 |
 
-**Single public files**
+### Single public files
 
 | File | Lines replaced |
 |---|---|
