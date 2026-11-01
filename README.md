@@ -2,7 +2,7 @@
 
 Reproduction for an UnvibeCode bug: a `-----BEGIN PRIVATE KEY-----` header with no END line makes the client's credential screening replace **everything after it** in the analysis request with `<REDACTED_PRIVATE_KEY>`, including code from other files.
 
-Issue: <link to the GitHub issue>
+Issue: https://github.com/FinanceFlash/unvibecode/issues/388
 
 ## What is in here
 
